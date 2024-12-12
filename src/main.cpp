@@ -88,8 +88,18 @@ START_GAME:
                 dy = -dy;
             }
 
-        if (x < 0 || x > 520) dx = -dx;
-        if (y < 0 || y > 450) dy = -dy;
+        if (x < 0 || x > 520) dx = -dx; // Rebote en las paredes izquierda y derecha
+        if (y < 0) dy = -dy;           // Rebote en la parte superior
+
+        // Si la pelota toca la parte inferior de la ventana
+        if (y > 550) {
+            // Reiniciar la posición de la pelota o manejar pérdida de vida
+            x = 300;
+            y = 300;
+            dx = 6;
+            dy = 5;
+            // Opcional: agregar lógica para reducir vidas o reiniciar nivel
+        }
 
         if (Keyboard::isKeyPressed(Keyboard::Right)) sPaddle.move(8, 0);
         if (Keyboard::isKeyPressed(Keyboard::Left)) sPaddle.move(-8, 0);
