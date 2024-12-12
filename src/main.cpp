@@ -93,12 +93,7 @@ START_GAME:
 
         // Si la pelota toca la parte inferior de la ventana
         if (y > 550) {
-            // Reiniciar la posición de la pelota o manejar pérdida de vida
-            x = 300;
-            y = 300;
-            dx = 6;
-            dy = 5;
-            // Opcional: agregar lógica para reducir vidas o reiniciar nivel
+            app.close(); // Cerrar el juego
         }
 
         if (Keyboard::isKeyPressed(Keyboard::Right)) sPaddle.move(8, 0);
