@@ -1,15 +1,65 @@
 @startuml
-class RenderWindow
-class Texture
-class Event
-class Font
-class Sprite
-class text
+class Ball {
+    - Sprite sprite
+    - float dx
+    - float dy
+    + Ball(const Texture& texture)
+    + void attachToPaddle(const Sprite& paddle)
+    + void moveBall(bool& ballAttached, int& lives, bool& resetPosition, float screenWidth, float screenHeight)
+    + FloatRect getBounds() const
+}
 
+class Paddle {
+    - Sprite sprite
+    + Paddle(const Texture& texture)
+    + void moveLeft(float speed)
+    + void moveRight(float speed, float screenWidth)
+    + FloatRect getBounds() const
+}
 
-RenderWindow  *-- Event
-RenderWindow  o-- Sprite
-RenderWindow  o-- text
-Texture
-dia --> o3
+class Block {
+    - Sprite sprite
+    - bool destroyed
+    + Block(const Texture& texture, float x, float y)
+    + FloatRect getBounds() const
+    + void destroy()
+}
+
+class Game {
+    - RenderWindow window
+    - Texture blockTexture
+    - Texture bgTexture
+    - Texture ballTexture
+    - Texture paddleTexture
+    - Texture startTexture
+    - Texture gameOverTexture
+    - Font font
+    - Text blockText
+    - Text livesText
+    - vector<Block> blocks
+    - Ball* ball
+    - Paddle* paddle
+    - int blocksDestroyed
+    - int lives
+    - bool ballAttached
+    + Game()
+    + ~Game()
+    + void resetGame()
+    + void run()
+    + void showStartScreen()
+    + void showGameOverScreen()
+    + void handleEvents()
+    + void handleCollisions()
+    + void updateUI()
+    + void render()
+}
+
+Game "1" *-- "1" Ball
+Game "1" *-- "1" Paddle
+Game "1" *-- "many" Block
+Game "1" -- "1" RenderWindow
+
+Ball "1"--o "1" Paddle : attachToPaddle
+Ball --> Block : moveBall
+
 @enduml
