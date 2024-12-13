@@ -6,14 +6,15 @@ Este proyecto es una implementación del clásico juego Arkanoid, desarrollado e
 	* Interfaz gráfica: El juego muestra un fondo, texto informativo sobre el progreso y las vidas restantes.
 	El juego incluye una pantalla de inicio, una mecánica para reiniciar el juego al perder todas las vidas y un mensaje de "Game Over".
 
- Cómo Jugar
-Objetivo
-Destruye todos los bloques moviendo la paleta para redirigir la bola y evitar que caiga al borde inferior de la pantalla. Mantén el control mientras acumulas puntos.
 
-Controles
-	* ← Flecha Izquierda: Mueve la paleta hacia la izquierda.
-	* → Flecha Derecha: Mueve la paleta hacia la derecha.
-	* Espacio: Suelta la bola de la paleta y comienza el juego.
+Cómo Jugar
+	Objetivo
+		Destruye todos los bloques moviendo la paleta para redirigir la bola y evitar que caiga al borde inferior de la pantalla. Mantén el control mientras acumulas puntos.
+
+	Controles
+		* ← Flecha Izquierda: Mueve la paleta hacia la izquierda.
+		* → Flecha Derecha: Mueve la paleta hacia la derecha.
+		* Espacio: Suelta la bola de la paleta y comienza el juego.
 
 Instrucciones
 	1. Al iniciar el juego, se mostrará una pantalla de inicio. Presiona cualquier tecla o clic para empezar.
@@ -65,12 +66,12 @@ Características Adicionales
 
 Capturas de Pantalla
 	Pantalla de Inicio
-
+		(../assets/images/pantalla_de_inicio.png)
 
 	Durante el Juego
-
+	assets/images/juego.png
 
 	Game Over
-
+		(../assets/images/Game_Over.png)
 Licencia
     Este proyecto está bajo la Licencia MIT. Siéntete libre de usar, modificar y distribuir este código según sea necesario.
