@@ -17,12 +17,13 @@ Cómo Jugar
 		* Espacio: Suelta la bola de la paleta y comienza el juego.
 
 Instrucciones
-	1. Al iniciar el juego, se mostrará una pantalla de inicio. Presiona cualquier tecla o clic para empezar.
-	2. La bola comenzará adherida a la paleta. Usa la barra espaciadora para liberarla.
-	3. Mueve la paleta con las flechas izquierda y derecha para mantener la bola en juego.
-	4. Destruye todos los bloques para ganar puntos.
-	5. Pierdes una vida si la bola cae al borde inferior. El juego termina cuando las vidas llegan a 0.
-	6. Si pierdes, se mostrará una pantalla de "Game Over". Podrás reiniciar el juego desde el comienzo.
+	1. En la consola ejecutar make runmain
+	2. Al iniciar el juego, se mostrará una pantalla de inicio. Presiona cualquier tecla o clic para empezar.
+	3. La bola comenzará adherida a la paleta. Usa la barra espaciadora para liberarla.
+	4. Mueve la paleta con las flechas izquierda y derecha para mantener la bola en juego.
+	5. Destruye todos los bloques para ganar puntos.
+	6. Pierdes una vida si la bola cae al borde inferior. El juego termina cuando las vidas llegan a 0.
+	7. Si pierdes, se mostrará una pantalla de "Game Over". Podrás reiniciar el juego desde el comienzo.
 Estructura del Proyecto
 
 /assets
