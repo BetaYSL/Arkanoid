@@ -4,6 +4,34 @@
 
 using namespace sf;
 
+void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x, float& y, float& dx, float& dy, bool& ballAttached)
+{
+    n = 0;
+    for (int i = 1; i <= 10; i++)
+        for (int j = 1; j <= 10; j++)
+        {
+            block[n].setPosition(i * 43, j * 20);
+            n++;
+        }
+
+    for (int j = 1; j <= 10; j++) {
+        block[n].setPosition(0, j * 20);
+        n++;
+    }
+
+    for (int j = 1; j <= 10; j++) {
+        block[n].setPosition(520 - 47, j * 20);
+        n++;
+    }
+
+    sPaddle.setPosition(300, 460);
+    x = 300;
+    y = 300;
+    dx = 5;
+    dy = 4;
+    ballAttached = true;
+}
+
 int main()
 {
     srand(time(0));
@@ -13,19 +41,20 @@ int main()
     app.setFramerateLimit(60);
 
     // Cargar texturas
-    Texture t1, t2, t3, t4, tInicio;
+    Texture t1, t2, t3, t4, tInicio, tGameOver;
     t1.loadFromFile("assets/images/block01.png");
-    t2.loadFromFile("assets/images/bg5.PNG");
+    t2.loadFromFile("assets/images/Background.PNG");
     t3.loadFromFile("assets/images/ball.png");
     t4.loadFromFile("assets/images/paddle.png");
     tInicio.loadFromFile("assets/images/Inicio.png");
+    tGameOver.loadFromFile("assets/images/fin.png");
 
     Sprite sBackground(t2), sBall(t3), sPaddle(t4);
-    Sprite sInicio(tInicio);
+    Sprite sInicio(tInicio), sGameOver(tGameOver);
 
     sPaddle.setPosition(300, 460);
 
-    Sprite block[1000];
+    Sprite block[1020];
     int n = 0;
 
     for (int i = 1; i <= 10; i++)
@@ -36,10 +65,22 @@ int main()
             n++;
         }
 
+    for (int j = 1; j <= 10; j++) {
+        block[n].setTexture(t1);
+        block[n].setPosition(0, j * 20);
+        n++;
+    }
+
+    for (int j = 1; j <= 10; j++) {
+        block[n].setTexture(t1);
+        block[n].setPosition(520 - 47, j * 20);
+        n++;
+    }
+
     float dx = 5, dy = 4;
     float x = 300, y = 300;
 
-    bool ballAttached = true; // Bandera para mantener la pelota en el paddle
+    bool ballAttached = true;
 
     // Pantalla de inicio
     while (app.isOpen())
@@ -50,14 +91,12 @@ int main()
             if (e.type == Event::Closed)
                 app.close();
 
-            // Si se presiona Enter o Click, salir del bucle de inicio
             if (e.type == Event::KeyPressed && e.key.code == Keyboard::Enter)
                 goto START_GAME;
             if (e.type == Event::MouseButtonPressed)
                 goto START_GAME;
         }
 
-        // Dibujar pantalla de inicio
         app.clear();
         app.draw(sInicio);
         app.display();
@@ -75,11 +114,9 @@ START_GAME:
         }
 
         if (ballAttached) {
-            // Mantener la pelota sobre el paddle
             x = sPaddle.getPosition().x + sPaddle.getGlobalBounds().width / 2 - sBall.getGlobalBounds().width / 2;
             y = sPaddle.getPosition().y - sBall.getGlobalBounds().height;
 
-            // Soltar la pelota al presionar la barra espaciadora
             if (Keyboard::isKeyPressed(Keyboard::Space)) {
                 ballAttached = false;
             }
@@ -100,12 +137,11 @@ START_GAME:
                     dy = -dy;
                 }
 
-            if (x < 0 || x > 520) dx = -dx; // Rebote en las paredes izquierda y derecha
-            if (y < 0) dy = -dy;           // Rebote en la parte superior
+            if (x < 0 || x > 520) dx = -dx;
+            if (y < 0) dy = -dy;
 
-            // Si la pelota toca la parte inferior de la ventana
             if (y > 550) {
-                app.close(); // Cerrar el juego
+                goto GAME_OVER;
             }
 
             if (FloatRect(x, y, 12, 12).intersects(sPaddle.getGlobalBounds()))
@@ -125,6 +161,28 @@ START_GAME:
         for (int i = 0; i < n; i++)
             app.draw(block[i]);
 
+        app.display();
+    }
+
+GAME_OVER:
+
+    while (app.isOpen())
+    {
+        Event e;
+        while (app.pollEvent(e))
+        {
+            if (e.type == Event::Closed)
+                app.close();
+
+            if (e.type == Event::KeyPressed && e.key.code == Keyboard::Enter)
+            {
+                resetGame(block, n, sBall, sPaddle, x, y, dx, dy, ballAttached);
+                goto START_GAME;
+            }
+        }
+
+        app.clear();
+        app.draw(sGameOver);
         app.display();
     }
 
