@@ -1,0 +1,15 @@
+@startuml
+class RenderWindow
+class Texture
+class Event
+class Font
+class Sprite
+class text
+
+
+RenderWindow  *-- Event
+RenderWindow  o-- Sprite
+RenderWindow  o-- text
+Texture
+dia --> o3
+@enduml

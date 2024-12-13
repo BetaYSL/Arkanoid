@@ -1,228 +1,288 @@
-#include <SFML/Graphics.hpp> 
+#include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 #include <SFML/Graphics/Text.hpp>
 #include <SFML/Graphics/Font.hpp>
-#include <time.h>
+#include <ctime>
+#include <vector>
 
 using namespace sf;
 
-void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x, float& y, float& dx, float& dy, bool& ballAttached, int& blocksDestroyed, int& lives)
-{
-    n = 0;
-    for (int i = 1; i <= 10; i++)
-        for (int j = 1; j <= 10; j++)
-        {
-            block[n].setPosition(i * 43, j * 20);
-            n++;
+// Clase que representa la bola
+class Ball {
+public:
+    Sprite sprite;
+    float dx, dy;
+
+    Ball(const Texture& texture) : dx(5), dy(4) {
+        sprite.setTexture(texture);
+        sprite.setPosition(300, 300);
+    }
+
+    void attachToPaddle(const Sprite& paddle) {
+        sprite.setPosition(
+            paddle.getPosition().x + paddle.getGlobalBounds().width / 2 - sprite.getGlobalBounds().width / 2,
+            paddle.getPosition().y - sprite.getGlobalBounds().height
+        );
+    }
+
+    void moveBall(bool& ballAttached, int& lives, bool& resetPosition, float screenWidth, float screenHeight) {
+        sprite.move(dx, dy);
+        Vector2f pos = sprite.getPosition();
+
+        if (pos.x < 0 || pos.x > screenWidth - sprite.getGlobalBounds().width) dx = -dx;
+        if (pos.y < 0) dy = -dy;
+
+        if (pos.y > screenHeight) {
+            lives--;
+            ballAttached = true;
+            resetPosition = true;
         }
-
-    for (int j = 1; j <= 10; j++) {
-        block[n].setPosition(0, j * 20);
-        n++;
     }
 
-    for (int j = 1; j <= 10; j++) {
-        block[n].setPosition(520 - 47, j * 20);
-        n++;
+    FloatRect getBounds() const {
+        return sprite.getGlobalBounds();
+    }
+};
+
+// Clase que representa la paleta
+class Paddle {
+public:
+    Sprite sprite;
+
+    Paddle(const Texture& texture) {
+        sprite.setTexture(texture);
+        sprite.setPosition(300, 460);
     }
 
-    sPaddle.setPosition(300, 460);
-    x = 300;
-    y = 300;
-    dx = 5;
-    dy = 4;
-    ballAttached = true;
-    blocksDestroyed = 0; // Reiniciar el contador de bloques destruidos
-    lives = 3; // Reiniciar vidas
-}
+    void moveLeft(float speed) {
+        sprite.move(-speed, 0);
+        if (sprite.getPosition().x < 0) sprite.setPosition(0, sprite.getPosition().y);
+    }
 
-int main()
-{
-    srand(time(0));
-
-    // Crear ventana
-    RenderWindow app(VideoMode(520, 550), "Arkanoid!");
-    app.setFramerateLimit(60);
-
-    // Cargar texturas
-    Texture t1, t2, t3, t4, tInicio, tGameOver;
-    t1.loadFromFile("assets/images/block01.png");
-    t2.loadFromFile("assets/images/Background.PNG");
-    t3.loadFromFile("assets/images/ball.png");
-    t4.loadFromFile("assets/images/paddle.png");
-    tInicio.loadFromFile("assets/images/Inicio.png");
-    tGameOver.loadFromFile("assets/images/fin.png");
-
-    Sprite sBackground(t2), sBall(t3), sPaddle(t4);
-    Sprite sInicio(tInicio), sGameOver(tGameOver);
-
-    sPaddle.setPosition(300, 460);
-
-    Sprite block[1020];
-    int n = 0;
-
-    for (int i = 1; i <= 10; i++)
-        for (int j = 1; j <= 10; j++)
-        {
-            block[n].setTexture(t1);
-            block[n].setPosition(i * 43, j * 20);
-            n++;
+    void moveRight(float speed, float screenWidth) {
+        sprite.move(speed, 0);
+        if (sprite.getPosition().x + sprite.getGlobalBounds().width > screenWidth) {
+            sprite.setPosition(screenWidth - sprite.getGlobalBounds().width, sprite.getPosition().y);
         }
-
-    for (int j = 1; j <= 10; j++) {
-        block[n].setTexture(t1);
-        block[n].setPosition(0, j * 20);
-        n++;
     }
 
-    for (int j = 1; j <= 10; j++) {
-        block[n].setTexture(t1);
-        block[n].setPosition(520 - 47, j * 20);
-        n++;
+    FloatRect getBounds() const {
+        return sprite.getGlobalBounds();
+    }
+};
+
+// Clase que representa los bloques
+class Block {
+public:
+    Sprite sprite;
+    bool destroyed = false;
+
+    Block(const Texture& texture, float x, float y) {
+        sprite.setTexture(texture);
+        sprite.setPosition(x, y);
     }
 
-    float dx = 5, dy = 4;
-    float x = 300, y = 300;
+    FloatRect getBounds() const {
+        return sprite.getGlobalBounds();
+    }
 
-    bool ballAttached = true;
+    void destroy() {
+        destroyed = true;
+        sprite.setPosition(-100, -100); // Fuera de la pantalla
+    }
+};
 
-    // Contador de bloques
-    int blocksDestroyed = 0;
-
-    // Contador de vidas
-    int lives = 3;
-
-    // Fuente para mostrar el contador
+// Clase principal que gestiona el juego
+class Game {
+private:
+    RenderWindow window;
+    Texture blockTexture, bgTexture, ballTexture, paddleTexture, startTexture, gameOverTexture;
     Font font;
-    font.loadFromFile("assets/fonts/Minecraft.ttf");
+    Text blockText, livesText;
+    std::vector<Block> blocks;
+    Ball* ball;
+    Paddle* paddle;
+    int blocksDestroyed;
+    int lives;
+    bool ballAttached;
 
-    Text text;
-    text.setFont(font);
-    text.setCharacterSize(20);
-    text.setFillColor(Color::White);
-    text.setPosition(10, 500);
+public:
+    Game() : window(VideoMode(520, 550), "Arkanoid!"), blocksDestroyed(0), lives(3), ballAttached(true) {
+        window.setFramerateLimit(60);
 
-    Text livesText;
-    livesText.setFont(font);
-    livesText.setCharacterSize(20);
-    livesText.setFillColor(Color::White);
-    livesText.setPosition(400, 500);
+        // Cargar texturas y fuentes
+        blockTexture.loadFromFile("assets/images/block01.png");
+        bgTexture.loadFromFile("assets/images/Background.PNG");
+        ballTexture.loadFromFile("assets/images/ball.png");
+        paddleTexture.loadFromFile("assets/images/paddle.png");
+        startTexture.loadFromFile("assets/images/Inicio.png");
+        gameOverTexture.loadFromFile("assets/images/fin.png");
+        font.loadFromFile("assets/fonts/Minecraft.ttf");
 
-    // Pantalla de inicio
-    while (app.isOpen())
-    {
-        Event e;
-        while (app.pollEvent(e))
-        {
-            if (e.type == Event::Closed)
-                app.close();
+        // Configurar texto
+        blockText.setFont(font);
+        blockText.setCharacterSize(20);
+        blockText.setFillColor(Color::White);
+        blockText.setPosition(10, 500);
 
-            if (e.type == Event::KeyPressed && e.key.code == Keyboard::Enter)
-                goto START_GAME;
-            if (e.type == Event::MouseButtonPressed)
-                goto START_GAME;
+        livesText.setFont(font);
+        livesText.setCharacterSize(20);
+        livesText.setFillColor(Color::White);
+        livesText.setPosition(400, 500);
+
+        // Inicializar objetos
+        ball = new Ball(ballTexture);
+        paddle = new Paddle(paddleTexture);
+
+        // Crear bloques
+        for (int i = 1; i <= 10; i++) {
+            for (int j = 1; j <= 10; j++) {
+                blocks.emplace_back(blockTexture, i * 43, j * 20);
+            }
         }
 
-        app.clear();
-        app.draw(sInicio);
-        app.display();
+        for (int j = 1; j <= 10; j++) {
+            blocks.emplace_back(blockTexture, 0, j * 20);
+            blocks.emplace_back(blockTexture, 520 - 47, j * 20);
+        }
     }
 
-START_GAME:
+    ~Game() {
+        delete ball;
+        delete paddle;
+    }
 
-    while (app.isOpen())
-    {
-        Event e;
-        while (app.pollEvent(e))
-        {
-            if (e.type == Event::Closed)
-                app.close();
+    void resetGame() {
+        blocksDestroyed = 0;
+        lives = 3;
+        ballAttached = true;
+
+        // Reset bloques
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks[i].destroyed = false;
+            blocks[i].sprite.setPosition((i % 10 + 1) * 43, (i / 10 + 1) * 20);
         }
 
-        if (ballAttached) {
-            x = sPaddle.getPosition().x + sPaddle.getGlobalBounds().width / 2 - sBall.getGlobalBounds().width / 2;
-            y = sPaddle.getPosition().y - sBall.getGlobalBounds().height;
+        ball->sprite.setPosition(300, 300);
+        paddle->sprite.setPosition(300, 460);
+    }
 
-            if (Keyboard::isKeyPressed(Keyboard::Space)) {
-                ballAttached = false;
-            }
-        } else {
-            x += dx;
-            for (int i = 0; i < n; i++)
-                if (FloatRect(x + 3, y + 3, 6, 6).intersects(block[i].getGlobalBounds()))
-                {
-                    block[i].setPosition(-100, 0);
-                    dx = -dx;
-                    blocksDestroyed++; // Incrementar contador al romper un bloque
-                }
+    void run() {
+        showStartScreen();
+        while (window.isOpen()) {
+            handleEvents();
 
-            y += dy;
-            for (int i = 0; i < n; i++)
-                if (FloatRect(x + 3, y + 3, 6, 6).intersects(block[i].getGlobalBounds()))
-                {
-                    block[i].setPosition(-100, 0);
-                    dy = -dy;
-                    blocksDestroyed++; // Incrementar contador al romper un bloque
-                }
-
-            if (x < 0 || x > 520) dx = -dx;
-            if (y < 0) dy = -dy;
-
-            if (y > 550) {
-                lives--; // Perder una vida
-                if (lives <= 0) {
-                    goto GAME_OVER;
-                }
-                ballAttached = true; // Adjuntar la bola nuevamente
+            if (ballAttached) {
+                ball->attachToPaddle(paddle->sprite);
+            } else {
+                ball->moveBall(ballAttached, lives, ballAttached, 520, 550);
+                handleCollisions();
             }
 
-            if (FloatRect(x, y, 12, 12).intersects(sPaddle.getGlobalBounds()))
-                dy = -(rand() % 5 + 2);
+            if (lives <= 0) {
+                showGameOverScreen();
+                resetGame();
+                continue;
+            }
+
+            updateUI();
+            render();
+        }
+    }
+
+    void showStartScreen() {
+        Sprite startSprite(startTexture);
+        while (window.isOpen()) {
+            Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == Event::Closed) window.close();
+                if (event.type == Event::KeyPressed || event.type == Event::MouseButtonPressed) return;
+            }
+
+            window.clear();
+            window.draw(startSprite);
+            window.display();
+        }
+    }
+
+    void showGameOverScreen() {
+        Sprite gameOverSprite(gameOverTexture);
+        while (window.isOpen()) {
+            Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == Event::Closed) window.close();
+                if (event.type == Event::KeyPressed) return;
+            }
+
+            window.clear();
+            window.draw(gameOverSprite);
+            window.display();
+        }
+    }
+
+    void handleEvents() {
+        Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == Event::Closed) window.close();
         }
 
-        if (Keyboard::isKeyPressed(Keyboard::Right)) sPaddle.move(8, 0);
-        if (Keyboard::isKeyPressed(Keyboard::Left)) sPaddle.move(-8, 0);
+        if (Keyboard::isKeyPressed(Keyboard::Right)) paddle->moveRight(8, 520);
+        if (Keyboard::isKeyPressed(Keyboard::Left)) paddle->moveLeft(8);
 
-        sBall.setPosition(x, y);
+        // Liberar la bola al presionar la barra espaciadora
+        if (Keyboard::isKeyPressed(Keyboard::Space) && ballAttached) {
+            ballAttached = false;
+        }
+    }
 
-        // Actualizar texto del contador
-        text.setString("Blocks destroyed: " + std::to_string(blocksDestroyed) + "\nBlocks left: " + std::to_string(n - blocksDestroyed));
+    void handleCollisions() {
+        // Colisión bola con bloques
+        for (auto& block : blocks) {
+            if (!block.destroyed && ball->getBounds().intersects(block.getBounds())) {
+                block.destroy();
+                blocksDestroyed++;
+                ball->dy = -ball->dy;
+            }
+        }
+
+        // Colisión bola con la paleta
+        if (ball->getBounds().intersects(paddle->getBounds())) {
+            ball->dy = -(rand() % 5 + 2);
+        }
+    }
+
+    void updateUI() {
+        blockText.setString("Blocks destroyed: " + std::to_string(blocksDestroyed) + 
+                            "\nBlocks left: " + std::to_string(blocks.size() - blocksDestroyed));
         livesText.setString("Lives: " + std::to_string(lives));
-
-        app.clear();
-        app.draw(sBackground);
-        app.draw(sBall);
-        app.draw(sPaddle);
-
-        for (int i = 0; i < n; i++)
-            app.draw(block[i]);
-
-        app.draw(text);
-        app.draw(livesText);
-        app.display();
     }
 
-GAME_OVER:
+    void render() {
+        window.clear();
 
-    while (app.isOpen())
-    {
-        Event e;
-        while (app.pollEvent(e))
-        {
-            if (e.type == Event::Closed)
-                app.close();
+        // Fondo
+        Sprite background(bgTexture);
+        window.draw(background);
 
-            if (e.type == Event::KeyPressed && e.key.code == Keyboard::Enter)
-            {
-                resetGame(block, n, sBall, sPaddle, x, y, dx, dy, ballAttached, blocksDestroyed, lives);
-                goto START_GAME;
-            }
+        // Bloques
+        for (auto& block : blocks) {
+            if (!block.destroyed) window.draw(block.sprite);
         }
 
-        app.clear();
-        app.draw(sGameOver);
-        app.display();
-    }
+        // Bola y paleta
+        window.draw(ball->sprite);
+        window.draw(paddle->sprite);
 
+        // Texto
+        window.draw(blockText);
+        window.draw(livesText);
+
+        window.display();
+    }
+};
+
+int main() {
+    Game game;
+    game.run();
     return 0;
 }
