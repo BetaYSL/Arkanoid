@@ -1,10 +1,12 @@
 #include <SFML/Graphics.hpp> 
 #include <SFML/Window.hpp>
+#include <SFML/Graphics/Text.hpp>
+#include <SFML/Graphics/Font.hpp>
 #include <time.h>
 
 using namespace sf;
 
-void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x, float& y, float& dx, float& dy, bool& ballAttached)
+void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x, float& y, float& dx, float& dy, bool& ballAttached, int& blocksDestroyed)
 {
     n = 0;
     for (int i = 1; i <= 10; i++)
@@ -30,6 +32,7 @@ void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x,
     dx = 5;
     dy = 4;
     ballAttached = true;
+    blocksDestroyed = 0; // Reiniciar el contador de bloques destruidos
 }
 
 int main()
@@ -82,6 +85,19 @@ int main()
 
     bool ballAttached = true;
 
+    // Contador de bloques
+    int blocksDestroyed = 0;
+
+    // Fuente para mostrar el contador
+    Font font;
+    font.loadFromFile("assets/fonts/Minecraft.ttf");
+
+    Text text;
+    text.setFont(font);
+    text.setCharacterSize(20);
+    text.setFillColor(Color::White);
+    text.setPosition(10, 500);
+
     // Pantalla de inicio
     while (app.isOpen())
     {
@@ -127,6 +143,7 @@ START_GAME:
                 {
                     block[i].setPosition(-100, 0);
                     dx = -dx;
+                    blocksDestroyed++; // Incrementar contador al romper un bloque
                 }
 
             y += dy;
@@ -135,6 +152,7 @@ START_GAME:
                 {
                     block[i].setPosition(-100, 0);
                     dy = -dy;
+                    blocksDestroyed++; // Incrementar contador al romper un bloque
                 }
 
             if (x < 0 || x > 520) dx = -dx;
@@ -153,6 +171,9 @@ START_GAME:
 
         sBall.setPosition(x, y);
 
+        // Actualizar texto del contador
+        text.setString("Blocks destroyed: " + std::to_string(blocksDestroyed) + "\nBlocks left: " + std::to_string(n - blocksDestroyed));
+
         app.clear();
         app.draw(sBackground);
         app.draw(sBall);
@@ -161,6 +182,7 @@ START_GAME:
         for (int i = 0; i < n; i++)
             app.draw(block[i]);
 
+        app.draw(text);
         app.display();
     }
 
@@ -176,7 +198,7 @@ GAME_OVER:
 
             if (e.type == Event::KeyPressed && e.key.code == Keyboard::Enter)
             {
-                resetGame(block, n, sBall, sPaddle, x, y, dx, dy, ballAttached);
+                resetGame(block, n, sBall, sPaddle, x, y, dx, dy, ballAttached, blocksDestroyed);
                 goto START_GAME;
             }
         }
