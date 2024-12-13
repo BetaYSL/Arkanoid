@@ -6,7 +6,7 @@
 
 using namespace sf;
 
-void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x, float& y, float& dx, float& dy, bool& ballAttached, int& blocksDestroyed)
+void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x, float& y, float& dx, float& dy, bool& ballAttached, int& blocksDestroyed, int& lives)
 {
     n = 0;
     for (int i = 1; i <= 10; i++)
@@ -33,6 +33,7 @@ void resetGame(Sprite block[], int& n, Sprite& sBall, Sprite& sPaddle, float& x,
     dy = 4;
     ballAttached = true;
     blocksDestroyed = 0; // Reiniciar el contador de bloques destruidos
+    lives = 3; // Reiniciar vidas
 }
 
 int main()
@@ -88,6 +89,9 @@ int main()
     // Contador de bloques
     int blocksDestroyed = 0;
 
+    // Contador de vidas
+    int lives = 3;
+
     // Fuente para mostrar el contador
     Font font;
     font.loadFromFile("assets/fonts/Minecraft.ttf");
@@ -97,6 +101,12 @@ int main()
     text.setCharacterSize(20);
     text.setFillColor(Color::White);
     text.setPosition(10, 500);
+
+    Text livesText;
+    livesText.setFont(font);
+    livesText.setCharacterSize(20);
+    livesText.setFillColor(Color::White);
+    livesText.setPosition(400, 500);
 
     // Pantalla de inicio
     while (app.isOpen())
@@ -159,7 +169,11 @@ START_GAME:
             if (y < 0) dy = -dy;
 
             if (y > 550) {
-                goto GAME_OVER;
+                lives--; // Perder una vida
+                if (lives <= 0) {
+                    goto GAME_OVER;
+                }
+                ballAttached = true; // Adjuntar la bola nuevamente
             }
 
             if (FloatRect(x, y, 12, 12).intersects(sPaddle.getGlobalBounds()))
@@ -173,6 +187,7 @@ START_GAME:
 
         // Actualizar texto del contador
         text.setString("Blocks destroyed: " + std::to_string(blocksDestroyed) + "\nBlocks left: " + std::to_string(n - blocksDestroyed));
+        livesText.setString("Lives: " + std::to_string(lives));
 
         app.clear();
         app.draw(sBackground);
@@ -183,6 +198,7 @@ START_GAME:
             app.draw(block[i]);
 
         app.draw(text);
+        app.draw(livesText);
         app.display();
     }
 
@@ -198,7 +214,7 @@ GAME_OVER:
 
             if (e.type == Event::KeyPressed && e.key.code == Keyboard::Enter)
             {
-                resetGame(block, n, sBall, sPaddle, x, y, dx, dy, ballAttached, blocksDestroyed);
+                resetGame(block, n, sBall, sPaddle, x, y, dx, dy, ballAttached, blocksDestroyed, lives);
                 goto START_GAME;
             }
         }
