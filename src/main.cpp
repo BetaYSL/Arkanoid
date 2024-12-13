@@ -9,38 +9,45 @@
 using namespace sf;
 
 // Clase para manejar los bloques
-class Block {
+class Block
+{
 private:
     Sprite sprite;
 
 public:
-    Block(Texture& texture, float x, float y) {
+    Block(Texture &texture, float x, float y)
+    {
         sprite.setTexture(texture);
         sprite.setPosition(x, y);
     }
 
-    void draw(RenderWindow& window) {
+    void draw(RenderWindow &window)
+    {
         window.draw(sprite);
     }
 
-    FloatRect getBounds() {
+    FloatRect getBounds()
+    {
         return sprite.getGlobalBounds();
     }
 };
 
 // Clase para manejar la bola
-class Ball {
+class Ball
+{
 private:
     Sprite sprite;
     Vector2f velocity;
 
 public:
-    Ball(Texture& texture) {
+    Ball(Texture &texture)
+    {
         sprite.setTexture(texture);
         reset();
     }
 
-    void move() {
+    void move()
+    {
         sprite.move(velocity);
         if (sprite.getPosition().x <= 0 || sprite.getPosition().x + sprite.getGlobalBounds().width >= 520)
             velocity.x *= -1;
@@ -48,40 +55,48 @@ public:
             velocity.y *= -1;
     }
 
-    void draw(RenderWindow& window) {
+    void draw(RenderWindow &window)
+    {
         window.draw(sprite);
     }
 
-    FloatRect getBounds() {
+    FloatRect getBounds()
+    {
         return sprite.getGlobalBounds();
     }
 
-    void reverseY() {
+    void reverseY()
+    {
         velocity.y *= -1;
     }
 
-    void reset() {
+    void reset()
+    {
         sprite.setPosition(260, 450);
         velocity = {5, -5};
     }
 
-    Vector2f getPosition() {
+    Vector2f getPosition()
+    {
         return sprite.getPosition();
     }
 };
 
 // Clase para manejar la pala
-class Paddle {
+class Paddle
+{
 private:
     Sprite sprite;
 
 public:
-    Paddle(Texture& texture) {
+    Paddle(Texture &texture)
+    {
         sprite.setTexture(texture);
         sprite.setPosition(210, 500);
     }
 
-    void move(float dx) {
+    void move(float dx)
+    {
         sprite.move(dx, 0);
         if (sprite.getPosition().x < 0)
             sprite.setPosition(0, sprite.getPosition().y);
@@ -89,23 +104,32 @@ public:
             sprite.setPosition(520 - sprite.getGlobalBounds().width, sprite.getPosition().y);
     }
 
-    void draw(RenderWindow& window) {
+    void draw(RenderWindow &window)
+    {
         window.draw(sprite);
     }
 
-    FloatRect getBounds() {
+    FloatRect getBounds()
+    {
         return sprite.getGlobalBounds();
     }
 
-    void reset() {
+    void reset()
+    {
         sprite.setPosition(210, 500);
     }
 };
 
 // Clase principal que gestiona el juego
-class Game {
+class Game
+{
 private:
-    enum GameState { Start, Playing, GameOver }; // Estados del juego
+    enum GameState
+    {
+        Start,
+        Playing,
+        GameOver
+    }; // Estados del juego
     GameState gameState;
 
     RenderWindow window;
@@ -113,8 +137,8 @@ private:
     Font font;
     Text blockText, livesText;
     std::vector<Block> blocks;
-    Ball* ball;
-    Paddle* paddle;
+    Ball *ball;
+    Paddle *paddle;
     int blocksDestroyed;
     int lives;
     bool ballAttached;
@@ -122,8 +146,9 @@ private:
     sf::Music music;
 
 public:
-    Game() 
-        : window(VideoMode(520, 550), "Arkanoid!"), gameState(Start), blocksDestroyed(0), lives(3), ballAttached(true) {
+    Game()
+        : window(VideoMode(520, 550), "Arkanoid!"), gameState(Start), blocksDestroyed(0), lives(3), ballAttached(true)
+    {
         window.setFramerateLimit(60);
 
         // Cargar texturas y fuentes
@@ -154,22 +179,27 @@ public:
         resetBlocks();
 
         // Inicializar música
-        if (!music.openFromFile("assets/music/musica.ogg")) {
+        if (!music.openFromFile("assets/music/musica.ogg"))
+        {
             throw std::runtime_error("No se pudo cargar la música.");
         }
         music.setLoop(true);
         music.play();
     }
 
-    ~Game() {
+    ~Game()
+    {
         delete ball;
         delete paddle;
     }
 
-    void run() {
-        while (window.isOpen()) {
+    void run()
+    {
+        while (window.isOpen())
+        {
             handleEvents();
-            if (gameState == Playing) {
+            if (gameState == Playing)
+            {
                 update();
             }
             render();
@@ -177,48 +207,65 @@ public:
     }
 
 private:
-    void handleEvents() {
+    void handleEvents()
+    {
         Event event;
-        while (window.pollEvent(event)) {
+        while (window.pollEvent(event))
+        {
             if (event.type == Event::Closed)
                 window.close();
         }
 
-        if (gameState == Start) {
-            if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+        if (gameState == Start)
+        {
+            if (Keyboard::isKeyPressed(Keyboard::Enter))
+            {
                 gameState = Playing;
             }
-        } else if (gameState == GameOver) {
-            if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+        }
+        else if (gameState == GameOver)
+        {
+            if (Keyboard::isKeyPressed(Keyboard::Enter))
+            {
                 resetGame();
                 gameState = Start;
             }
-        } else if (gameState == Playing) {
-            if (Keyboard::isKeyPressed(Keyboard::Left)) {
+        }
+        else if (gameState == Playing)
+        {
+            if (Keyboard::isKeyPressed(Keyboard::Left))
+            {
                 paddle->move(-7);
             }
 
-            if (Keyboard::isKeyPressed(Keyboard::Right)) {
+            if (Keyboard::isKeyPressed(Keyboard::Right))
+            {
                 paddle->move(7);
             }
 
-            if (Keyboard::isKeyPressed(Keyboard::Space) && ballAttached) {
+            if (Keyboard::isKeyPressed(Keyboard::Space) && ballAttached)
+            {
                 ballAttached = false;
             }
         }
     }
 
-    void update() {
-        if (!ballAttached) {
+    void update()
+    {
+        if (!ballAttached)
+        {
             ball->move();
         }
 
-        if (ball->getBounds().intersects(paddle->getBounds())) {
+        if (ball->getBounds().intersects(paddle->getBounds()))
+        {
             ball->reverseY();
         }
 
-        for (auto it = blocks.begin(); it != blocks.end(); ++it) {
-            if (ball->getBounds().intersects(it->getBounds())) {
+        for (auto it = blocks.begin(); it != blocks.end(); ++it)
+        {
+            if (ball->getBounds().intersects(it->getBounds()))
+            {
                 blocks.erase(it);
                 ball->reverseY();
                 blocksDestroyed++;
@@ -226,29 +273,38 @@ private:
             }
         }
 
-        if (ball->getPosition().y > 550) {
+        if (ball->getPosition().y > 550)
+        {
             ball->reset();
             ballAttached = true;
             lives--;
-            if (lives == 0) {
+            if (lives == 0)
+            {
                 gameState = GameOver;
             }
         }
     }
 
-    void render() {
+    void render()
+    {
         window.clear();
         Sprite background(bgTexture);
         window.draw(background);
 
-        if (gameState == Start) {
+        if (gameState == Start)
+        {
             Sprite startScreen(startTexture);
             window.draw(startScreen);
-        } else if (gameState == GameOver) {
+        }
+        else if (gameState == GameOver)
+        {
             Sprite gameOverScreen(gameOverTexture);
             window.draw(gameOverScreen);
-        } else if (gameState == Playing) {
-            for (auto& block : blocks) {
+        }
+        else if (gameState == Playing)
+        {
+            for (auto &block : blocks)
+            {
                 block.draw(window);
             }
 
@@ -256,7 +312,7 @@ private:
             paddle->draw(window);
 
             blockText.setString("Blocks: " + std::to_string(blocksDestroyed));
-            
+
             livesText.setString("Lives: " + std::to_string(lives));
 
             window.draw(blockText);
@@ -266,21 +322,26 @@ private:
         window.display();
     }
 
-    void resetBlocks() {
+    void resetBlocks()
+    {
         blocks.clear();
-        for (int i = 1; i <= 10; i++) {
-            for (int j = 1; j <= 10; j++) {
+        for (int i = 1; i <= 10; i++)
+        {
+            for (int j = 1; j <= 10; j++)
+            {
                 blocks.emplace_back(blockTexture, i * 43, j * 20);
             }
         }
 
-        for (int j = 1; j <= 10; j++) {
+        for (int j = 1; j <= 10; j++)
+        {
             blocks.emplace_back(blockTexture, 0, j * 20);
             blocks.emplace_back(blockTexture, 520 - 47, j * 20);
         }
     }
 
-    void resetGame() {
+    void resetGame()
+    {
         blocksDestroyed = 0;
         lives = 3;
         ballAttached = true;
@@ -290,7 +351,8 @@ private:
     }
 };
 
-int main() {
+int main()
+{
     Game game;
     game.run();
     return 0;

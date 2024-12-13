@@ -3,14 +3,16 @@
 
 #include <SFML/Graphics.hpp>
 
-class Block {
+class Block
+{
 public:
     sf::Sprite sprite;
 
-    Block(sf::Texture& texture, float x, float y);
+    Block(sf::Texture &texture, float x, float y);
 };
 
-Block::Block(sf::Texture& texture, float x, float y) {
+Block::Block(sf::Texture &texture, float x, float y)
+{
     sprite.setTexture(texture);
     sprite.setPosition(x, y);
 }

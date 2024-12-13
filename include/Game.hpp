@@ -25,7 +25,7 @@ public:
     void render();
 };
 
-Game::Game(): app(sf::VideoMode(520, 450), "Arkanoid!"), ball(sf::Texture()), paddle(sf::Texture())
+
 {
 
     app.setFramerateLimit(60);
