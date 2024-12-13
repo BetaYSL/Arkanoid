@@ -62,7 +62,7 @@ public:
 
     void reset() {
         sprite.setPosition(260, 450);
-        velocity = {3, -3};
+        velocity = {5, -5};
     }
 
     Vector2f getPosition() {
@@ -195,11 +195,11 @@ private:
             }
         } else if (gameState == Playing) {
             if (Keyboard::isKeyPressed(Keyboard::Left)) {
-                paddle->move(-5);
+                paddle->move(-7);
             }
 
             if (Keyboard::isKeyPressed(Keyboard::Right)) {
-                paddle->move(5);
+                paddle->move(7);
             }
 
             if (Keyboard::isKeyPressed(Keyboard::Space) && ballAttached) {
