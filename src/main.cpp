@@ -23,7 +23,7 @@ int main()
     Sprite sBackground(t2), sBall(t3), sPaddle(t4);
     Sprite sInicio(tInicio);
 
-    sPaddle.setPosition(300, 440);
+    sPaddle.setPosition(300, 460);
 
     Sprite block[1000];
     int n = 0;
@@ -36,8 +36,10 @@ int main()
             n++;
         }
 
-    float dx = 6, dy = 5;
+    float dx = 5, dy = 4;
     float x = 300, y = 300;
+
+    bool ballAttached = true; // Bandera para mantener la pelota en el paddle
 
     // Pantalla de inicio
     while (app.isOpen())
@@ -72,35 +74,46 @@ START_GAME:
                 app.close();
         }
 
-        x += dx;
-        for (int i = 0; i < n; i++)
-            if (FloatRect(x + 3, y + 3, 6, 6).intersects(block[i].getGlobalBounds()))
-            {
-                block[i].setPosition(-100, 0);
-                dx = -dx;
+        if (ballAttached) {
+            // Mantener la pelota sobre el paddle
+            x = sPaddle.getPosition().x + sPaddle.getGlobalBounds().width / 2 - sBall.getGlobalBounds().width / 2;
+            y = sPaddle.getPosition().y - sBall.getGlobalBounds().height;
+
+            // Soltar la pelota al presionar la barra espaciadora
+            if (Keyboard::isKeyPressed(Keyboard::Space)) {
+                ballAttached = false;
+            }
+        } else {
+            x += dx;
+            for (int i = 0; i < n; i++)
+                if (FloatRect(x + 3, y + 3, 6, 6).intersects(block[i].getGlobalBounds()))
+                {
+                    block[i].setPosition(-100, 0);
+                    dx = -dx;
+                }
+
+            y += dy;
+            for (int i = 0; i < n; i++)
+                if (FloatRect(x + 3, y + 3, 6, 6).intersects(block[i].getGlobalBounds()))
+                {
+                    block[i].setPosition(-100, 0);
+                    dy = -dy;
+                }
+
+            if (x < 0 || x > 520) dx = -dx; // Rebote en las paredes izquierda y derecha
+            if (y < 0) dy = -dy;           // Rebote en la parte superior
+
+            // Si la pelota toca la parte inferior de la ventana
+            if (y > 550) {
+                app.close(); // Cerrar el juego
             }
 
-        y += dy;
-        for (int i = 0; i < n; i++)
-            if (FloatRect(x + 3, y + 3, 6, 6).intersects(block[i].getGlobalBounds()))
-            {
-                block[i].setPosition(-100, 0);
-                dy = -dy;
-            }
-
-        if (x < 0 || x > 520) dx = -dx; // Rebote en las paredes izquierda y derecha
-        if (y < 0) dy = -dy;           // Rebote en la parte superior
-
-        // Si la pelota toca la parte inferior de la ventana
-        if (y > 550) {
-            app.close(); // Cerrar el juego
+            if (FloatRect(x, y, 12, 12).intersects(sPaddle.getGlobalBounds()))
+                dy = -(rand() % 5 + 2);
         }
 
         if (Keyboard::isKeyPressed(Keyboard::Right)) sPaddle.move(8, 0);
         if (Keyboard::isKeyPressed(Keyboard::Left)) sPaddle.move(-8, 0);
-
-        if (FloatRect(x, y, 12, 12).intersects(sPaddle.getGlobalBounds()))
-            dy = -(rand() % 5 + 2);
 
         sBall.setPosition(x, y);
 
